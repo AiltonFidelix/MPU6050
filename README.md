@@ -52,7 +52,6 @@ void app_main()
 ```
 
 ### Author
----
 
 Create by Ailton Fidelix
 

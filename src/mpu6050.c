@@ -219,7 +219,7 @@ esp_err_t mpuSetFIFObuffer(uint8_t fifo)
 }
 
 /**
- * @brief Get the temperature 
+ * @brief Get the temperature
  * @return float the temperature value in Celsius
  */
 float mpuGetTemperature()
