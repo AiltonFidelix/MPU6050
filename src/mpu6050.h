@@ -3,7 +3,7 @@
  * @author Ailton Fidelix (ailton1626@gmail.com)
  * @brief MPU6050 library for ESP-IDF
  * @version 1.0.0
- * @date 2022-08-07
+ * @date 07-08-2022
  * @copyright Copyright (c) 2022
  */
 
@@ -15,10 +15,13 @@
 #include "driver/i2c.h"
 
 // I2C master clock
-#define I2C_FREQ_HZ 348000 
+#define MPU6050_I2C_FREQ_HZ 400000 
 
 // Device address
-#define MPU6050_ADDRESS 0x68
+#define MPU6050_ADDRESS 0x69
+
+// Device default address
+#define MPU6050_DEFAULT_ADDRESS 0x68
 
 // MPU6050 internal registers addresses used
 #define MPU6050_CONFIG 0x1A
@@ -80,7 +83,7 @@
 #define NACK_VAL 0x1               // I2C nack value
 
 // Functions used to initialize the communication, write and read
-esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range);
+esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range, bool install_driver);
 esp_err_t mpuReadSensors();
 uint8_t mpuReadByte(uint8_t reg);
 esp_err_t mpuWriteByte(uint8_t reg, uint8_t value);

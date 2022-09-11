@@ -3,7 +3,7 @@
  * @author Ailton Fidelix (ailton1626@gmail.com)
  * @brief MPU6050 library for ESP-IDF
  * @version 1.0.0
- * @date 2022-08-07
+ * @date 07-08-2022
  * @copyright Copyright (c) 2022
  */
 
@@ -23,36 +23,57 @@ static const char TAG[] = "mpu6050";
  * @brief Initialize the MPU6050 I2C connection
  * @param accel_range accelerometer range scale
  * @param gyro_range gyroscope range scale
- * @return esp_err_t ESP_OK if connection was ok, otherwise ESP_ERR
+ * @param install_driver if need install the I2C driver
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
-esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range)
+esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range, bool install_driver)
 {
     ESP_LOGI(TAG, "Beginning connection");
 
-    i2c_config_t i2c_config = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = GPIO_NUM_21,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_io_num = GPIO_NUM_22,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_FREQ_HZ,
-    };
-
-    i2c_param_config(I2C_NUM_0, &i2c_config);
-
-    esp_err_t ret = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
-
-    if (ret != ESP_OK)
-        return ret;
-
-    if (mpuReadByte(MPU6050_WHO_AM_I) != MPU6050_ADDRESS)
+    if (install_driver)
     {
-        ESP_LOGI(TAG, "Device with 0x%x address not found", MPU6050_ADDRESS);
-        return ESP_ERR_INVALID_ARG;
+        ESP_LOGI(TAG, "Installing I2C driver");
+
+        i2c_config_t i2c_config = {
+            .mode = I2C_MODE_MASTER,
+            .sda_io_num = GPIO_NUM_21,
+            .sda_pullup_en = GPIO_PULLUP_ENABLE,
+            .scl_io_num = GPIO_NUM_22,
+            .scl_pullup_en = GPIO_PULLUP_ENABLE,
+            .master.clk_speed = MPU6050_I2C_FREQ_HZ,
+        };
+
+        i2c_param_config(I2C_NUM_0, &i2c_config);
+
+        esp_err_t ret = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+
+        if (ret != ESP_OK)
+        {
+            ESP_LOGE(TAG, "I2C driver install failed");
+            return ret;
+        }
+        ESP_LOGI(TAG, "I2C driver install success");
     }
     else
     {
-        ESP_LOGI(TAG, "Device with 0x%x address found", MPU6050_ADDRESS);
+        ESP_LOGI(TAG, "I2C driver not installed");
+    }
+
+    if (MPU6050_ADDRESS == MPU6050_DEFAULT_ADDRESS)
+    {
+        if (mpuReadByte(MPU6050_WHO_AM_I) != MPU6050_ADDRESS)
+        {
+            ESP_LOGE(TAG, "Device with 0x%x address not found", MPU6050_ADDRESS);
+            return ESP_ERR_INVALID_ARG;
+        }
+        else
+        {
+            ESP_LOGI(TAG, "Device with 0x%x address found", MPU6050_ADDRESS);
+        }
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Device with 0x%x address, not default", MPU6050_ADDRESS);
     }
 
     // Configure the gyroscope and accelerometer scale ranges
@@ -64,8 +85,8 @@ esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range)
 
     // Set the sample rate divider to 0
     mpuWriteByte(MPU6050_SMPRT_DIV, 0);
-    // Disable multi-master mode and set master clock to 348KHz
-    mpuWriteByte(MPU6050_I2C_MST_CTRL, 0);
+    // Disable multi-master mode and set master clock to 400KHz
+    mpuWriteByte(MPU6050_I2C_MST_CTRL, 0x0D);
 
     // Disable sleep mode
     return mpuSetSleepMode(false);
@@ -74,7 +95,7 @@ esp_err_t mpuBegin(uint8_t accel_range, uint8_t gyro_range)
 /**
  * @brief Configure the MPU6050 accelerometer range
  * @param accel_range accelerometer range to be set
- * @return esp_err_t ESP_OK if the range set was ok, otherwise ESP_ERR
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
 esp_err_t mpuSetAccelRange(uint8_t accel_range)
 {
@@ -104,7 +125,7 @@ esp_err_t mpuSetAccelRange(uint8_t accel_range)
 /**
  * @brief Configure the MPU6050 gyroscope range
  * @param gyro_range gyroscope range to be set
- * @return esp_err_t ESP_OK if the range set was ok, otherwise ESP_ERR
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
 esp_err_t mpuSetGyroRange(uint8_t gyro_range)
 {
@@ -134,7 +155,7 @@ esp_err_t mpuSetGyroRange(uint8_t gyro_range)
 /**
  * @brief Configure the MPU6050 sleep mode
  * @param mode true to enable or false to disable
- * @return esp_err_t ESP_OK if the sleep mode set was ok, otherwise ESP_ERR
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
 esp_err_t mpuSetSleepMode(bool mode)
 {
@@ -154,7 +175,7 @@ esp_err_t mpuSetSleepMode(bool mode)
 /**
  * @brief Configure the accelerometer and gyroscope filter
  * @param bandwidth Filter value to be set
- * @return esp_err_t ESP_OK if the bandwidth set was ok, otherwise ESP_ERR
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
 esp_err_t mpuSetFilterBandwidth(uint8_t bandwidth)
 {
@@ -190,7 +211,7 @@ esp_err_t mpuSetFilterBandwidth(uint8_t bandwidth)
 /**
  * @brief Configure the FIFO buffer
  * @param fifo mode that FIFO will operate
- * @return esp_err_t ESP_OK if the FIFO set was ok, otherwise ESP_ERR
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
 esp_err_t mpuSetFIFObuffer(uint8_t fifo)
 {
@@ -290,7 +311,7 @@ float mpuGetGyroscopeZ()
 
 /**
  * @brief Read MPU6050 sensors registers 0x3B ~ 0x47
- * @return esp_err_t ESP_OK if the read was ok, otherwise ESP_ERR
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
 esp_err_t mpuReadSensors()
 {
@@ -360,7 +381,7 @@ uint8_t mpuReadByte(uint8_t reg)
  * @brief Write a single register in the MPU6050 device
  * @param reg the register to be write
  * @param value to be write
- * @return esp_err_t ESP_OK if the write was ok, otherwise ESP_ERR
+ * @return esp_err_t ESP_OK if success, otherwise ESP_FAIL
  */
 esp_err_t mpuWriteByte(uint8_t reg, uint8_t value)
 {

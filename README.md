@@ -1,6 +1,6 @@
 # MPU6050 library for ESP-IDF
 
-This library allow to do the basic configurations to work with the MPU6050 device and read the sensors values.
+This library allow to do the configurations to work with the MPU6050 device and read the sensors values.
 
 
 ## How to use
@@ -25,8 +25,9 @@ Otherwise, copy this project like be better to you.
 
 void app_main()
 {
-    printf("Starting the MPU6050!\n");
-    mpuBegin(MPU6050_ACCEL_RANGE_2G, MPU6050_GYRO_RANGE_250DPS);
+    printf("Starting MPU6050!\n");
+    // bool true parameter to install the I2C driver
+    mpuBegin(MPU6050_ACCEL_RANGE_2G, MPU6050_GYRO_RANGE_250DPS, true);
     mpuSetFilterBandwidth(MPU6050_BAND_21_HZ);
 
     while (1)
