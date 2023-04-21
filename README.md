@@ -11,7 +11,7 @@ If you are using PlatformIO like me, you can just clone this project in the **li
 cd lib/ && git clone https://github.com/AiltonFidelix/MPU6050.git
 ```
 
-Otherwise, copy this project like be better to you.
+Otherwise, just copy this project and use however you want.
 
 ## Example
 
