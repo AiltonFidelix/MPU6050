@@ -1,6 +1,6 @@
 /**
  * @file mpu6050.h
- * @author Ailton Fidelix (ailton1626@gmail.com)
+ * @author Ailton Fidelix
  * @brief MPU6050 library for ESP-IDF
  * @version 1.0.0
  * @date 07-08-2022
